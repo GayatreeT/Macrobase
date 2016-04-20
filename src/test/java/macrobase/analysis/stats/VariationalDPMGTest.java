@@ -135,7 +135,7 @@ public class VariationalDPMGTest {
     public void bivariateOkSeparatedNormalTest() throws ConfigurationException, IOException, SQLException {
         MacroBaseConf conf = new MacroBaseConf()
                 .set(MacroBaseConf.TRANSFORM_TYPE, "VARIATIONAL_DPMM")
-                .set(MacroBaseConf.MIXTURE_MAX_ITERATIONS_TO_CONVERGE, 15)
+                .set(MacroBaseConf.MIXTURE_MAX_ITERATIONS_TO_CONVERGE, 65)
                 .set(MacroBaseConf.DPM_TRUNCATING_PARAMETER, 20)
                 .set(MacroBaseConf.DPM_CONCENTRATION_PARAMETER, 0.1)
                 .set(MacroBaseConf.NUM_MIXTURES, 3)

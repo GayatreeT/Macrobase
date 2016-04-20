@@ -17,7 +17,7 @@ def add_macrobase_args(parser):
   parser.add_argument('--macrobase-analysis-kde-bandwidthMultiplier',
                       type=float,
                       action=MacrobaseArgAction)
-  parser.add_argument('--macrobase-analysis-detectorType',
+  parser.add_argument('--macrobase-analysis-transformType',
                       action=MacrobaseArgAction)
   parser.add_argument('--macrobase-analysis-treeKde-accuracy', type=float,
                       action=MacrobaseArgAction)
