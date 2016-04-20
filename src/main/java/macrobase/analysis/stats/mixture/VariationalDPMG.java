@@ -45,6 +45,7 @@ public class VariationalDPMG extends BatchMixtureModel {
 
     // Parameters for Base Distribution of the DP process, which is Wishart-Gaussian
     private double baseNu;
+    private RealMatrix baseOmega;
     private RealMatrix inverseBaseOmega;  // Use inverse of baseOmega, since it is used in the update equations.
     private double baseBeta;
     private RealVector baseLocation;
@@ -87,8 +88,8 @@ public class VariationalDPMG extends BatchMixtureModel {
         }
         baseBeta = Math.pow(R, -2);
         baseLocation = new ArrayRealVector(midpoints);
-        inverseBaseOmega = MatrixUtils.createRealIdentityMatrix(dimension);
-
+        baseOmega = MatrixUtils.createRealIdentityMatrix(dimension);
+        inverseBaseOmega = AlgebraUtils.invertMatrix(baseOmega);
     }
 
     @Override
@@ -183,6 +184,8 @@ public class VariationalDPMG extends BatchMixtureModel {
                 }
             }
 
+            log.debug("after 1, ELBO = {}", calculateELBO(data));
+
             // 2. Reevaluate clusters based on densities that we have for each point.
             // 2. Reevaluate atoms and stick lengths.
             S = new ArrayList<>(T);
@@ -219,8 +222,9 @@ public class VariationalDPMG extends BatchMixtureModel {
                 atomOmega.set(t, AlgebraUtils.invertMatrix(wInverse));
             }
 
-
             updatePredictiveDistributions();
+
+            log.debug("after 2, ELBO = {}", calculateELBO(data));
 
             double oldLogLikelihood = logLikelihood;
             double sumWeights = 0;
@@ -251,27 +255,168 @@ public class VariationalDPMG extends BatchMixtureModel {
         }
     }
 
-    private double getExpectationLogPAtoms() {
+    private double calculateELBO(List<Datum> data) {
+        return getDataExpectLogP(data)
+                + getAssignExpectLogP()
+                + getStickExpectLogP()
+                + getAtomExpectLogP()
+                - getAssignExpectLogQ()
+                - getStickExpectLogQ()
+                - getAtomExpectLogQ();
+    }
+
+    /**
+     * depends on
+     * - r
+     * - atoms
+     *
+     * @return
+     */
+    private double getDataExpectLogP(List<Datum> data) {
+        int D = atomOmega.get(0).getColumnDimension();
+        double ex_lnp_data = D * Math.log(2 * Math.PI);
+        for (int i = 1; i < T; i++) {
+            double clusterWeight = calculateClusterWeight(i);
+            RealVector center = calculateWeightedClusterSum(data, i).mapDivide(clusterWeight);
+            RealMatrix S = calculateUnscaledS(data, i, center).scalarMultiply(1. / clusterWeight);
+            RealVector _diff = center.subtract(atomLocation.get(i));
+
+            ex_lnp_data += clusterWeight * (
+                    new Wishart(atomOmega.get(i), atomNu[i])).getExpectationLogDeterminantLambda()
+                    - D / atomBeta[i]
+                    - atomNu[i] * S.multiply(atomOmega.get(i)).getTrace()
+                    - atomNu[i] * (_diff.dotProduct(atomOmega.get(i).operate(_diff)));
+        }
+        return ex_lnp_data;
+    }
+
+    private double calculateClusterWeight(int cluster) {
+        double weight = 0;
+        for (double[] probas : r) {
+            weight += probas[cluster];
+        }
+        return weight;
+    }
+
+
+    private RealMatrix calculateUnscaledS(List<Datum> data, int cluster, RealVector center) {
+        int D = data.get(0).getMetrics().getDimension();
+        RealMatrix unscaledS = new BlockRealMatrix(D, D);
+        for (int n = 0; n < data.size(); n++) {
+            RealVector _diff = data.get(n).getMetrics().subtract(center);
+            unscaledS = unscaledS.add(_diff.outerProduct(_diff).scalarMultiply(r[n][cluster]));
+        }
+        return unscaledS;
+    }
+
+    private RealVector calculateWeightedClusterSum(List<Datum> data, int cluster) {
+        RealVector sum = new ArrayRealVector(data.get(0).getMetrics().getDimension());
+        for (int n = 0; n < data.size(); n++) {
+            sum = sum.add(data.get(n).getMetrics().mapMultiply(r[n][cluster]));
+        }
+        return sum;
+    }
+
+    /**
+     * depends on
+     * - r
+     * - sticks
+     *
+     * @return
+     */
+    private double getAssignExpectLogP() {
+        int N = r.length;
+        double logP = 0;
+        for (int n = 0; n < N; n++) {
+            for (int i = 0; i < T; i++) {
+                double q_greter = 0;
+                for (int j = i + 1; j < T; j++) {
+                    q_greter += r[n][j];
+                }
+                logP += q_greter * (Gamma.digamma(shapeParams[i][1]) - Gamma.digamma(shapeParams[i][0] + shapeParams[i][1]))
+                        + r[n][i] * (Gamma.digamma(shapeParams[i][0] - Gamma.digamma(shapeParams[i][0] + shapeParams[i][1])));
+            }
+        }
+        return logP;
+    }
+
+    /**
+     * depends on
+     * - sticks
+     *
+     * @return
+     */
+    private double getStickExpectLogP() {
+        return T * (Gamma.digamma(1) - Gamma.digamma(1 + concentrationParameter));
+    }
+
+    /**
+     * depends on
+     * - atoms
+     *
+     * @return
+     */
+    private double getAtomExpectLogP() {
+        int D = atomOmega.get(0).getColumnDimension();
+        double ex_lnp_atom = T * (new Wishart(baseOmega, baseNu)).lnB()
+                + T * 0.5 * D * Math.log(baseBeta / 2 / Math.PI);
+        for (int i = 0; i < T; i++) {
+            RealVector _diff = atomLocation.get(i).subtract(baseLocation);
+            ex_lnp_atom += 0.5 * (baseNu - D) * (new Wishart(atomOmega.get(i), atomNu[i])).getExpectationLogDeterminantLambda()
+                    - D * baseBeta / atomBeta[i]
+                    - baseBeta * atomNu[i] * _diff.dotProduct(atomOmega.get(i).operate(_diff))
+                    - 0.5 * atomNu[i] * inverseBaseOmega.multiply(atomOmega.get(i)).getTrace();
+        }
+        return ex_lnp_atom;
+    }
+
+    /**
+     * depends on
+     * - atoms
+     *
+     * @return
+     */
+    private double getAtomExpectLogQ() {
         int dataDimension = atomOmega.get(0).getColumnDimension();
-        double ex_lnp_atoms = 0;
+        double ex_lnq_atoms = 0;
         for (int t = 0; t < T; t++) {
             Wishart wishart = new Wishart(atomOmega.get(t), atomNu[t]);
-            ex_lnp_atoms += 0.5 * wishart.getExpectationLogDeterminantLambda()
+            ex_lnq_atoms += 0.5 * wishart.getExpectationLogDeterminantLambda()
                     + 0.5 * dataDimension * Math.log(atomBeta[t] / 2 / Math.PI)
                     - 0.5 * dataDimension
                     - wishart.getEntropy();
         }
-        return ex_lnp_atoms;
+        return ex_lnq_atoms;
     }
 
-    private double getExpectationLogPAssignments() {
-        double ex_lnp_mult = 0;
+    /**
+     * depends on
+     * - r
+     *
+     * @return
+     */
+    private double getAssignExpectLogQ() {
+        double ex_lnq_mult = 0;
         for (double[] clusterProbas : r) {
             for (double rnk : clusterProbas) {
-                ex_lnp_mult += rnk * Math.log(rnk);
+                ex_lnq_mult += rnk * Math.log(rnk);
             }
         }
-        return ex_lnp_mult;
+        return ex_lnq_mult;
+    }
+
+    /**
+     * depends on
+     * - sticks
+     *
+     * @return
+     */
+    private double getStickExpectLogQ() {
+        double ex_lnq_sticks = 0;
+        for (int i = 0; i < T; i++) {
+            ex_lnq_sticks += Gamma.digamma(shapeParams[i][0]) - Gamma.digamma(shapeParams[i][0] + shapeParams[i][1]);
+        }
+        return ex_lnq_sticks;
     }
 
     private void instanciateVariationalParameters(int numPoints, int maxNumClusters) {
