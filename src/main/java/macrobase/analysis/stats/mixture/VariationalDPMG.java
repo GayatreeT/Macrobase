@@ -2,6 +2,7 @@ package macrobase.analysis.stats.mixture;
 
 import macrobase.analysis.stats.BatchMixtureModel;
 import macrobase.analysis.stats.distribution.MultivariateTDistribution;
+import macrobase.analysis.stats.distribution.Wishart;
 import macrobase.conf.MacroBaseConf;
 import macrobase.conf.MacroBaseDefaults;
 import macrobase.datamodel.Datum;
@@ -251,9 +252,14 @@ public class VariationalDPMG extends BatchMixtureModel {
     }
 
     private double getExpectationLogPAtoms() {
+        int dataDimension = atomOmega.get(0).getColumnDimension();
         double ex_lnp_atoms = 0;
         for (int t = 0; t < T; t++) {
-            //ex_lnp_atoms += 0.5 * ln_wavy_lambda + 0.5 * dataDimension * Math.log(atomBeta[t] / 2 / Math.PI) - 0.5 * dataDimension - predictiveDistributions.get(t).getEntropy();
+            Wishart wishart = new Wishart(atomOmega.get(t), atomNu[t]);
+            ex_lnp_atoms += 0.5 * wishart.getExpectationLogDeterminantLambda()
+                    + 0.5 * dataDimension * Math.log(atomBeta[t] / 2 / Math.PI)
+                    - 0.5 * dataDimension
+                    - wishart.getEntropy();
         }
         return ex_lnp_atoms;
     }

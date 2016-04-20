@@ -11,7 +11,7 @@ public class WishartTest {
     private static final Logger log = LoggerFactory.getLogger(WishartTest.class);
 
     @Test
-    public void testEntropy() {
+    public void entropyTest() {
         double[][] matrixArray;
 
         // Comparison values were taken from scipy implementation of wishart entropy.
