@@ -347,7 +347,8 @@ public class VariationalDPMG extends BatchMixtureModel {
      * @return
      */
     private double getStickExpectLogP() {
-        return T * (Gamma.digamma(1) - Gamma.digamma(1 + concentrationParameter));
+        //return T * (Gamma.digamma(1) - Gamma.digamma(1 + concentrationParameter));  FIXME: WRONG!
+        return 0;
     }
 
     /**
@@ -412,11 +413,12 @@ public class VariationalDPMG extends BatchMixtureModel {
      * @return
      */
     private double getStickExpectLogQ() {
-        double ex_lnq_sticks = 0;
-        for (int i = 0; i < T; i++) {
-            ex_lnq_sticks += Gamma.digamma(shapeParams[i][0]) - Gamma.digamma(shapeParams[i][0] + shapeParams[i][1]);
-        }
-        return ex_lnq_sticks;
+        return 0;
+        //double ex_lnq_sticks = 0; //FIXME: Probably wrong.
+        //for (int i = 0; i < T; i++) {
+        //    ex_lnq_sticks += Gamma.digamma(shapeParams[i][0]) - Gamma.digamma(shapeParams[i][0] + shapeParams[i][1]);
+        //}
+        //return ex_lnq_sticks;
     }
 
     private void instantiateVariationalParameters(int numPoints, int maxNumClusters) {
