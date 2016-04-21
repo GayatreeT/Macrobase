@@ -16,6 +16,7 @@ def parse_args(*argument_list):
                       default='target/scores/3gaussians-7k-grid.json')
   parser.add_argument('--plot', default='density',
                       choices=['density', 'components', 'difference'])
+  parser.add_argument('--title')
   args = parser.parse_args(*argument_list)
   return args
 
@@ -87,4 +88,6 @@ if __name__ == '__main__':
     CS = plt.contour(X, Y, Z - Zgaussians, linewidth=10000, inline=1)
   plt.clabel(CS, inline=1)
 
+  if args.title:
+    plt.title(args.title)
   plt.show()

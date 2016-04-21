@@ -55,7 +55,7 @@ public class VariationalGMMTest {
     public void bivariateWellSeparatedNormalTest() throws ConfigurationException, IOException, SQLException {
         MacroBaseConf conf = new MacroBaseConf()
                 .set(MacroBaseConf.TRANSFORM_TYPE, "VARIATIONAL_GMM")
-                .set(MacroBaseConf.NUM_MIXTURES, 3)
+                .set(MacroBaseConf.NUM_MIXTURES, 10)
                 .set(MacroBaseConf.DATA_LOADER_TYPE, "CSV_LOADER")
                 .set(MacroBaseConf.CSV_COMPRESSION, CSVIngester.Compression.GZIP)
                 .set(MacroBaseConf.CSV_INPUT_FILE, "src/test/resources/data/3gaussians-700points.csv.gz")
@@ -67,6 +67,23 @@ public class VariationalGMMTest {
 
         VariationalGMM variationalGMM = new VariationalGMM(conf);
         List<RealVector> calculatedMeans;
+
+        variationalGMM.train(data);
+        double[][] boundaries = {
+                {-1, 13.01},
+                {-1, 13.01},
+        };
+        JsonUtils.dumpAsJson(variationalGMM.getCovariances(), "VariationalGMMTest-bivariateWellSeparatedNormalTest-covariances.json");
+        JsonUtils.dumpAsJson(variationalGMM.getMeans(), "VariationalGMMTest-bivariateWellSeparatedNormalTest-means.json");
+        JsonUtils.dumpAsJson(variationalGMM.getPriorAdjustedWeights(), "VariationalGMMTest-bivariateWellSeparatedNormalTest-weights.json");
+
+        conf.set(MacroBaseConf.SCORE_DUMP_FILE_CONFIG_PARAM, "3gaussians-700-grid.json");
+        ScoreDumper dumper = new ScoreDumper(conf);
+        dumper.dumpScores(variationalGMM, boundaries, 0.05);
+
+        conf.set(MacroBaseConf.SCORE_DUMP_FILE_CONFIG_PARAM, "3gaussians-700-data.json");
+        dumper = new ScoreDumper(conf);
+        dumper.dumpScores(variationalGMM, data);
 
         int numClustersIdentified = 0;
         // Make sure we have 3 clusters. Sometimes initialization is not great.
@@ -134,6 +151,7 @@ public class VariationalGMMTest {
                 }
             }
         }
+
     }
 
     @Test
@@ -171,6 +189,24 @@ public class VariationalGMMTest {
         VariationalGMM variationalGMM = new VariationalGMM(conf);
         variationalGMM.train(data);
 
+        double[][] boundaries = {
+                {0, 6.01},
+                {-2, 4.01},
+        };
+        List<Datum> scoredData = DiagnosticsUtils.create2DGrid(boundaries, 0.05);
+
+        JsonUtils.dumpAsJson(variationalGMM.getCovariances(), "VariationalGMMTest-bivariateOkSeparatedNormalTest-covariances.json");
+        JsonUtils.dumpAsJson(variationalGMM.getMeans(), "VariationalGMMTest-bivariateOkSeparatedNormalTest-means.json");
+        JsonUtils.dumpAsJson(variationalGMM.getPriorAdjustedWeights(), "VariationalGMMTest-bivariateOkSeparatedNormalTest-weights.json");
+
+        conf.set(MacroBaseConf.SCORE_DUMP_FILE_CONFIG_PARAM, "3gaussians-7k-grid.json");
+        ScoreDumper dumper = new ScoreDumper(conf);
+        dumper.dumpScores(variationalGMM, scoredData);
+
+        conf.set(MacroBaseConf.SCORE_DUMP_FILE_CONFIG_PARAM, "3gaussians-7k-data.json");
+        dumper = new ScoreDumper(conf);
+        dumper.dumpScores(variationalGMM, data);
+
         List<RealVector> calculatedMeans = variationalGMM.getMeans();
         List<RealMatrix> calculatedCovariances = variationalGMM.getCovariances();
 
@@ -190,23 +226,6 @@ public class VariationalGMMTest {
             assertEquals("a cluster was not identified", true, identified);
         }
 
-        double[][] boundaries = {
-                {0, 6.01},
-                {-2, 4.01},
-        };
-        List<Datum> scoredData = DiagnosticsUtils.create2DGrid(boundaries, 0.05);
-
-        JsonUtils.dumpAsJson(variationalGMM.getCovariances(), "VariationalGMMTest-bivariateOkSeparatedNormalTest-covariances.json");
-        JsonUtils.dumpAsJson(variationalGMM.getMeans(), "VariationalGMMTest-bivariateOkSeparatedNormalTest-means.json");
-        JsonUtils.dumpAsJson(variationalGMM.getPriorAdjustedWeights(), "VariationalGMMTest-bivariateOkSeparatedNormalTest-weights.json");
-
-        conf.set(MacroBaseConf.SCORE_DUMP_FILE_CONFIG_PARAM, "3gaussians-7k-grid.json");
-        ScoreDumper dumper = new ScoreDumper(conf);
-        dumper.dumpScores(variationalGMM, scoredData);
-
-        conf.set(MacroBaseConf.SCORE_DUMP_FILE_CONFIG_PARAM, "3gaussians-7k-data.json");
-        dumper = new ScoreDumper(conf);
-        dumper.dumpScores(variationalGMM, data);
     }
 
     @Test
