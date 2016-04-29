@@ -1,10 +1,12 @@
+import argparse
 import json
 import math
-import os
 import matplotlib.mlab as mlab
 import matplotlib.pyplot as plt
 import numpy as np
-import argparse
+import os
+from common import add_plot_limit_args
+from common import set_plot_limits
 
 SAVEFIG_INFER_VALUE = 'INFER_SAVEFIG_FILENAME'
 
@@ -19,6 +21,7 @@ def parse_args(*argument_list):
   parser.add_argument('--plot', default='density',
                       choices=['density', 'components', 'difference'])
   parser.add_argument('--savefig', nargs='?', const=SAVEFIG_INFER_VALUE)
+  add_plot_limit_args(parser)
   args = parser.parse_args(*argument_list)
   return args
 
@@ -83,6 +86,8 @@ def plot_score_contours(args):
   elif args.plot == 'difference':
     CS = plt.contour(X, Y, Z - Zgaussians, linewidth=10000, inline=1)
   plt.clabel(CS, inline=1)
+
+  set_plot_limits(plt, args)
 
   if args.savefig:
     if args.savefig == SAVEFIG_INFER_VALUE:

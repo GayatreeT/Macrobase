@@ -1,0 +1,14 @@
+macrobase:
+  macrobase.query.name: phillips-GA
+  macrobase.pipeline.class: macrobase.analysis.pipeline.GridDumpingPipeline
+  macrobase.analysis.transformType: VARIATIONAL_GMM
+  macrobase.analysis.stat.mixtures.numMixtures: 10
+  macrobase.loader.csv.file: power_usage-GA.csv
+  macrobase.analysis.em.improvementCutoffRatio: 0.0001
+  macrobase.loader.csv.compression: UNCOMPRESSED
+  macrobase.loader.loaderType: CSV_LOADER
+  macrobase.loader.attributes: [cid]
+  macrobase.loader.targetHighMetrics: [power_usage, time]
+  macrobase.loader.targetLowMetrics: []
+post_run:
+  - plot_score_contours: "--plot density --savefig --y-limits 0 24 --x-limits 0 45"

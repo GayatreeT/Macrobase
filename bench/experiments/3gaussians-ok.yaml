@@ -10,4 +10,4 @@ macrobase:
   macrobase.loader.targetLowMetrics: []
   macrobase.query.name: ok_gaussians_finite_gmm
 post_run:
-  - plot_score_contours: "--plot density"
+  - plot_score_contours: "--plot density --savefig"
