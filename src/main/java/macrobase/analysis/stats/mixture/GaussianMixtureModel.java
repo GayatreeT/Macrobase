@@ -1,6 +1,5 @@
 package macrobase.analysis.stats.mixture;
 
-import macrobase.analysis.stats.BatchMixtureModel;
 import macrobase.analysis.stats.distribution.MultivariateNormal;
 import macrobase.conf.MacroBaseConf;
 import macrobase.conf.MacroBaseDefaults;
@@ -134,11 +133,18 @@ public class GaussianMixtureModel extends BatchMixtureModel {
         return 0;
     }
 
-    public List<RealVector> getMeans() {
+    @Override
+    public List<RealVector> getClusterCenters() {
         return mu;
     }
 
-    public List<RealMatrix> getCovariance() {
+    @Override
+    protected double[] getClusterWeights() {
+        return phi;
+    }
+
+    @Override
+    public List<RealMatrix> getClusterCovariances() {
         return sigma;
     }
 

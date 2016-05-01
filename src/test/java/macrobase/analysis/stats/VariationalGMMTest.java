@@ -1,9 +1,7 @@
 package macrobase.analysis.stats;
 
-import com.google.common.collect.Lists;
 import macrobase.analysis.stats.mixture.GaussianMixtureModel;
 import macrobase.analysis.stats.mixture.VariationalGMM;
-import macrobase.conf.ConfigurationException;
 import macrobase.conf.MacroBaseConf;
 import macrobase.datamodel.Datum;
 import macrobase.diagnostics.JsonUtils;
@@ -18,8 +16,6 @@ import org.junit.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.io.IOException;
-import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -86,8 +82,8 @@ public class VariationalGMMTest {
             }
 
         }
-        calculatedMeans = variationalGMM.getMeans();
-        List<RealMatrix> calculatedCovariances = variationalGMM.getCovariances();
+        calculatedMeans = variationalGMM.getClusterCenters();
+        List<RealMatrix> calculatedCovariances = variationalGMM.getClusterCovariances();
 
         double[][] clusterMeans = {
                 {2, 11},
@@ -107,8 +103,8 @@ public class VariationalGMMTest {
 
         GaussianMixtureModel gmm = new GaussianMixtureModel(conf);
         gmm.train(data);
-        List<RealVector> emMeans = gmm.getMeans();
-        List<RealMatrix> emCovariances = gmm.getCovariance();
+        List<RealVector> emMeans = gmm.getClusterCenters();
+        List<RealMatrix> emCovariances = gmm.getClusterCovariances();
 
         for (int i = 0; i < 3; i++) {
             boolean identified = false;
@@ -175,8 +171,8 @@ public class VariationalGMMTest {
         VariationalGMM variationalGMM = new VariationalGMM(conf);
         variationalGMM.train(data);
 
-        List<RealVector> calculatedMeans = variationalGMM.getMeans();
-        List<RealMatrix> calculatedCovariances = variationalGMM.getCovariances();
+        List<RealVector> calculatedMeans = variationalGMM.getClusterCenters();
+        List<RealMatrix> calculatedCovariances = variationalGMM.getClusterCovariances();
 
         for (int i = 0; i < 3; i++) {
             boolean identified = false;
@@ -200,8 +196,8 @@ public class VariationalGMMTest {
         };
         List<Datum> scoredData = DiagnosticsUtils.createGridFixedIncrement(boundaries, 0.05);
 
-        JsonUtils.dumpAsJson(variationalGMM.getCovariances(), "VariationalGMMTest-bivariateOkSeparatedNormalTest-covariances.json");
-        JsonUtils.dumpAsJson(variationalGMM.getMeans(), "VariationalGMMTest-bivariateOkSeparatedNormalTest-means.json");
+        JsonUtils.dumpAsJson(variationalGMM.getClusterCovariances(), "VariationalGMMTest-bivariateOkSeparatedNormalTest-covariances.json");
+        JsonUtils.dumpAsJson(variationalGMM.getClusterCenters(), "VariationalGMMTest-bivariateOkSeparatedNormalTest-means.json");
         JsonUtils.dumpAsJson(variationalGMM.getPriorAdjustedWeights(), "VariationalGMMTest-bivariateOkSeparatedNormalTest-weights.json");
 
         conf.set(MacroBaseConf.SCORE_DUMP_FILE_CONFIG_PARAM, "3gaussians-7k-grid.json");
@@ -240,7 +236,7 @@ public class VariationalGMMTest {
         while (numClustersIdentified < 2) {
             variationalGMM.train(data);
 
-            calculatedMeans = variationalGMM.getMeans();
+            calculatedMeans = variationalGMM.getClusterCenters();
             calculatedWeights = variationalGMM.getPriorAdjustedWeights();
 
             numClustersIdentified = 0;

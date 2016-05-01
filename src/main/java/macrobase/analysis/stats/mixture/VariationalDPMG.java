@@ -1,6 +1,5 @@
 package macrobase.analysis.stats.mixture;
 
-import macrobase.analysis.stats.BatchMixtureModel;
 import macrobase.analysis.stats.distribution.MultivariateTDistribution;
 import macrobase.conf.MacroBaseConf;
 import macrobase.conf.MacroBaseDefaults;
@@ -262,6 +261,7 @@ public class VariationalDPMG extends BatchMixtureModel {
         return 0;
     }
 
+    @Override
     public double[] getClusterWeights() {
         double[] proportions = new double[T];
         double stickRemaining = 1;
@@ -274,10 +274,12 @@ public class VariationalDPMG extends BatchMixtureModel {
         return proportions;
     }
 
+    @Override
     public List<RealVector> getClusterCenters() {
         return atomLocation;
     }
 
+    @Override
     public List<RealMatrix> getClusterCovariances() {
         List<RealMatrix> covariances = new ArrayList<>(T);
         for (int t=0; t<T; t++) {

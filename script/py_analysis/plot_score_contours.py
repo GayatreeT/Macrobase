@@ -7,6 +7,8 @@ import numpy as np
 import os
 from common import add_plot_limit_args
 from common import set_plot_limits
+import pandas as pd
+from plot_distribution import _plot_hist2d
 
 SAVEFIG_INFER_VALUE = 'INFER_SAVEFIG_FILENAME'
 
@@ -20,6 +22,9 @@ def parse_args(*argument_list):
                       default='target/scores/3gaussians-7k-grid.json')
   parser.add_argument('--plot', default='density',
                       choices=['density', 'components', 'difference'])
+  parser.add_argument('--hist2d', nargs=2)
+  parser.add_argument('--histogram-bins', type=int, default=100)
+  parser.add_argument('--csv', type=argparse.FileType('r'))
   parser.add_argument('--savefig', nargs='?', const=SAVEFIG_INFER_VALUE)
   add_plot_limit_args(parser)
   args = parser.parse_args(*argument_list)
@@ -88,6 +93,10 @@ def plot_score_contours(args):
   plt.clabel(CS, inline=1)
 
   set_plot_limits(plt, args)
+
+  if args.csv and args.hist2d:
+    args.data = pd.read_csv(args.csv)
+    _plot_hist2d(args.data, args)
 
   if args.savefig:
     if args.savefig == SAVEFIG_INFER_VALUE:
