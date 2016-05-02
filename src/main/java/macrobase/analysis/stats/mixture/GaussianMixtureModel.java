@@ -139,7 +139,7 @@ public class GaussianMixtureModel extends BatchMixtureModel {
     }
 
     @Override
-    protected double[] getClusterWeights() {
+    public double[] getClusterWeights() {
         return phi;
     }
 

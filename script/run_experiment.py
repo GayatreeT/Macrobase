@@ -18,6 +18,7 @@ SCORE_DUMP_FILE_CONFIG_PARAM = "macrobase.analysis.results.store"
 HIGH_METRICS = "macrobase.loader.targetHighMetrics"
 DETECTOR = "macrobase.analysis.detectorType"
 DUMP_SCORE_GRID = 'macrobase.diagnostic.dumpScoreGrid'
+DUMP_MIXTURES = 'macrobase.diagnostic.dumpMixtureComponents'
 SCORED_DATA_FILE = "macrobase.diagnostic.scoreDataFile"
 QUERY_NAME = "macrobase.query.name"
 
@@ -127,6 +128,7 @@ if __name__ == '__main__':
     config[SCORE_DUMP_FILE_CONFIG_PARAM] = taskname + '.json'
     config[SCORED_DATA_FILE] = '{name}-scored.json'.format(name=taskname)
     config[DUMP_SCORE_GRID] = '{name}-grid.json'.format(name=taskname)
+    config[DUMP_MIXTURES] = '{name}-mixtures.json'.format(name=taskname)
     if 'synthetic_data' in experiment:
       config['dbUrl'] = data_file
 
