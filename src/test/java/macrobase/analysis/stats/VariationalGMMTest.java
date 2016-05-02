@@ -52,7 +52,7 @@ public class VariationalGMMTest {
      */
     public void bivariateWellSeparatedNormalTest() throws Exception {
         MacroBaseConf conf = new MacroBaseConf()
-                .set(MacroBaseConf.RANDOM_SEED, 4)
+                .set(MacroBaseConf.RANDOM_SEED, 44)
                 .set(MacroBaseConf.TRANSFORM_TYPE, "VARIATIONAL_GMM")
                 .set(MacroBaseConf.NUM_MIXTURES, 3)
                 .set(MacroBaseConf.DATA_LOADER_TYPE, "CSV_LOADER")
@@ -69,18 +69,15 @@ public class VariationalGMMTest {
 
         int numClustersIdentified = 0;
         // Make sure we have 3 clusters. Sometimes initialization is not great.
-        while (numClustersIdentified < 3) {
-            variationalGMM.train(data);
+        variationalGMM.train(data);
 
-            double[] calculatedWeights = variationalGMM.getPriorAdjustedWeights();
+        double[] calculatedWeights = variationalGMM.getPriorAdjustedWeights();
 
-            numClustersIdentified = 0;
-            for (double weight : calculatedWeights) {
-                if (weight > 0.1) {
-                    numClustersIdentified += 1;
-                }
+        numClustersIdentified = 0;
+        for (double weight : calculatedWeights) {
+            if (weight > 0.1) {
+                numClustersIdentified += 1;
             }
-
         }
         calculatedMeans = variationalGMM.getClusterCenters();
         List<RealMatrix> calculatedCovariances = variationalGMM.getClusterCovariances();

@@ -1,13 +1,12 @@
 package macrobase.analysis.pipeline;
 
-import macrobase.analysis.classify.BatchingPercentileClassifier;
 import macrobase.analysis.classify.DumpClassifier;
+import macrobase.analysis.classify.MixtureGroupClassifier;
 import macrobase.analysis.classify.OutlierClassifier;
 import macrobase.analysis.result.AnalysisResult;
 import macrobase.analysis.summary.BatchSummarizer;
 import macrobase.analysis.summary.Summary;
-import macrobase.analysis.transform.BatchScoreFeatureTransform;
-import macrobase.analysis.transform.BeforeAfterDumpingBatchScoreFeatureTransform;
+import macrobase.analysis.transform.BatchMixtureCoeffTransform;
 import macrobase.analysis.transform.FeatureTransform;
 import macrobase.analysis.transform.GridDumpingBatchScoreTransform;
 import macrobase.conf.MacroBaseConf;
@@ -35,15 +34,15 @@ public class MixtureModelPipeline extends BasePipeline {
         List<Datum> data = ingester.getStream().drain();
         long loadEndMs = System.currentTimeMillis();
 
-        BatchScoreFeatureTransform batchTransform = new BatchScoreFeatureTransform(conf, conf.getTransformType());
-        FeatureTransform gridDumpingTransform = new GridDumpingBatchScoreTransform(conf, batchTransform);
+        BatchMixtureCoeffTransform mixtureProbabilityTransform = new BatchMixtureCoeffTransform(conf, conf.getTransformType());
+        FeatureTransform gridDumpingTransform = new GridDumpingBatchScoreTransform(conf, mixtureProbabilityTransform);
         gridDumpingTransform.initialize();
-        FeatureTransform dumpingTransform = new BeforeAfterDumpingBatchScoreFeatureTransform(conf, gridDumpingTransform);
-        dumpingTransform.initialize();
-        dumpingTransform.consume(data);
+        //FeatureTransform dumpingTransform = new BeforeAfterDumpingBatchScoreFeatureTransform(conf, gridDumpingTransform);
+        //dumpingTransform.initialize();
+        //dumpingTransform.consume(data);
 
-        OutlierClassifier outlierClassifier = new BatchingPercentileClassifier(conf);
-        outlierClassifier.consume(dumpingTransform.getStream().drain());
+        OutlierClassifier outlierClassifier = new MixtureGroupClassifier(conf, mixtureProbabilityTransform.getMixtureModel());
+        outlierClassifier.consume(gridDumpingTransform.getStream().drain());
 
         if (conf.getBoolean(MacroBaseConf.CLASSIFIER_DUMP)) {
             String queryName = conf.getString(MacroBaseConf.QUERY_NAME);

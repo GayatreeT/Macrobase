@@ -88,6 +88,7 @@ public class MacroBaseConf extends Configuration {
     public static final String CONTEXTUAL_DENSECONTEXTTAU = "macrobase.analysis.contextual.denseContextTau";
     public static final String CONTEXTUAL_NUMINTERVALS = "macrobase.analysis.contextual.numIntervals";
     public static final String OUTLIER_STATIC_THRESHOLD = "macrobase.analysis.classify.outlierStaticThreshold";
+    public static final String TARGET_GROUP = "macrobase.analysis.classify.targetGroup";
 
     public static final String SCORE_DUMP_FILE_CONFIG_PARAM = "macrobase.diagnostic.dumpScoreFile";
     public static final String CLASSIFIER_DUMP = "macrobase.diagnostic.dumpClassifier";
@@ -262,6 +263,13 @@ public class MacroBaseConf extends Configuration {
             return Double.parseDouble(_conf.get(key));
         }
         return defaultValue;
+    }
+
+    public List<Double> getDoubleList(String key) throws ConfigurationException {
+        if (!_conf.containsKey(key)) {
+            throw new MissingParameterException(key);
+        }
+        return _conf.get(key).length() > 0 ? Arrays.asList(_conf.get(key).split(",[ ]*")).stream().map(Double::parseDouble).collect(Collectors.toList()) : new ArrayList<>();
     }
 
     public Integer getInt(String key) throws ConfigurationException {

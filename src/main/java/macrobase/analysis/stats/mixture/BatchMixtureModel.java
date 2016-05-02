@@ -74,4 +74,6 @@ public abstract class BatchMixtureModel extends BatchTrainScore {
      * @return covariances of mixture components
      */
     public abstract List<RealMatrix> getClusterCovariances();
+
+    public abstract double[] getClusterProbabilities(Datum d);
 }

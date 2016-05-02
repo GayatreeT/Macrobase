@@ -62,7 +62,7 @@ public class VariationalGMM extends BatchMixtureModel {
         // priorNu = 1. / dimensions;
         priorNu = 0.1;
         priorW = MatrixUtils.createRealIdentityMatrix(dimensions);
-        priorW.setEntry(1, 1, 3);
+        //priorW.setEntry(1, 1, 3);
         RealMatrix priorWInverse = AlgebraUtils.invertMatrix(priorW);
 
         alpha = new double[K];
@@ -71,14 +71,17 @@ public class VariationalGMM extends BatchMixtureModel {
         W = new ArrayList<>(K);
 
         // Initialize
-        try {
-            m = initalizeClustersFromFile("centers.json", K);
-            log.debug("centers: {}", m);
-        } catch (FileNotFoundException e) {
-            e.printStackTrace();
+        if (false) {
+            try {
+                m = initalizeClustersFromFile("centers.json", K);
+            } catch (FileNotFoundException e) {
+                e.printStackTrace();
+                m = gonzalezInitializeMixtureCenters(data, K);
+            }
+        } else {
             m = gonzalezInitializeMixtureCenters(data, K);
-            log.debug("initialized cluster centers as: {}", m);
         }
+        log.debug("initialized cluster centers as: {}", m);
         for (int k = 0; k < this.K; k++) {
             alpha[k] = 1. / K;
             beta[k] = priorBeta;
@@ -226,5 +229,20 @@ public class VariationalGMM extends BatchMixtureModel {
 
     public double[] getPriorAdjustedWeights() {
         return clusterWeight;
+    }
+
+    @Override
+    public double[] getClusterProbabilities(Datum d) {
+        double[] probas = new double[K];
+        double[] weights = getClusterWeights();
+        double normalizingConstant = 0;
+        for (int i = 0; i < K; i++) {
+            probas[i] = weights[i] * predictiveDistributions.get(i).density(d.getMetrics());
+            normalizingConstant += probas[i];
+        }
+        for (int i = 0; i < K; i++) {
+            probas[i] /= normalizingConstant;
+        }
+        return probas;
     }
 }

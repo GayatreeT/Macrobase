@@ -148,5 +148,19 @@ public class GaussianMixtureModel extends BatchMixtureModel {
         return sigma;
     }
 
+    @Override
+    public double[] getClusterProbabilities(Datum d) {
+        double[] probas = new double[K];
+        double normalizingConstant = 0;
+        for (int k = 0; k < K; k++) {
+            probas[k] = phi[k] * mixtureDistributions.get(k).density(d.getMetrics());
+            normalizingConstant += probas[k];
+        }
+        for (int k = 0; k < K; k++) {
+            probas[k] /= normalizingConstant;
+        }
+        return probas;
+    }
+
 }
 
