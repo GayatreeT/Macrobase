@@ -21,6 +21,7 @@ DUMP_SCORE_GRID = 'macrobase.diagnostic.dumpScoreGrid'
 DUMP_MIXTURES = 'macrobase.diagnostic.dumpMixtureComponents'
 SCORED_DATA_FILE = "macrobase.diagnostic.scoreDataFile"
 QUERY_NAME = "macrobase.query.name"
+PIPELINE = 'macrobase.pipeline.class'
 
 SAVEFIG_INFER_VALUE = 'INFER_SAVEFIG_FILENAME'
 
@@ -131,6 +132,8 @@ if __name__ == '__main__':
     config[DUMP_MIXTURES] = '{name}-mixtures.json'.format(name=taskname)
     if 'synthetic_data' in experiment:
       config['dbUrl'] = data_file
+    if PIPELINE not in config:
+      config[PIPELINE] = 'macrobase.analysis.pipeline.GridDumpingPipeline'
 
   config_file = _file('conf', 'custom', taskname + '.yaml')
   with open(config_file, 'w') as config_yaml:
@@ -140,7 +143,6 @@ if __name__ == '__main__':
   print kwargs
   if args.profile:
     kwargs['profiler'] = 'yourkit'
-  kwargs['macrobase.pipeline.class'] = 'macrobase.analysis.pipeline.GridDumpingPipeline'
   run_macrobase(conf=config_file, **kwargs)
 
   for script_dict in experiment.get('post_run', []):

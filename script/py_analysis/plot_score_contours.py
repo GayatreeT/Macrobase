@@ -22,8 +22,9 @@ def parse_args(*argument_list):
                       default='bivariateOkSeparatedNormalTest')
   parser.add_argument('--scored-grid',
                       default='target/scores/3gaussians-7k-grid.json')
+  parser.add_argument('--score-cap', type=float)
   parser.add_argument('--plot', default='density',
-                      choices=['density', 'components', 'difference'])
+                      choices=['density', 'components', 'difference', 'noop'])
   # histogram
   parser.add_argument('--hist2d', nargs=2)
   parser.add_argument('--histogram-bins', type=int, default=100)
@@ -65,6 +66,8 @@ def plot_score_contours(args):
     weights = json.load(args.weights)
     weights = [w / sum(weights) for w in weights]
     print weights
+    weights = [0.4 * w / max(weights) for w in weights]
+    print weights
     centers = load_cluster_parameters(args.centers)
     sigmas = load_cluster_parameters(args.covariances)
     fig = plt.figure(0)
@@ -78,6 +81,9 @@ def plot_score_contours(args):
     plt.scatter(x, y, s=weights)
 
   X, Y, Z = load_json_dump(args.scored_grid)
+
+  if args.score_cap:
+    Z = [min(z, args.score_cap) for z in Z]
 
   minX, maxX = min(X), max(X)
   minY, maxY = min(Y), max(Y)
@@ -118,7 +124,10 @@ def plot_score_contours(args):
     CS = plt.contour(X, Y, Z, linewidth=10000, inline=1)
   elif args.plot == 'difference':
     CS = plt.contour(X, Y, Z - Zgaussians, linewidth=10000, inline=1)
-  plt.clabel(CS, inline=1)
+
+  if args.plot != 'noop':
+    #plt.clabel(CS, inline=1)
+    pass
 
   set_plot_limits(plt, args)
 

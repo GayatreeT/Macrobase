@@ -19,6 +19,7 @@ import java.util.List;
  */
 public class VariationalGMM extends BatchMixtureModel {
     private static final Logger log = LoggerFactory.getLogger(VariationalGMM.class);
+    private final String initialClusterCentersFile;
 
     private int K;  // Number of mixture components
     private double progressCutoff;
@@ -47,6 +48,7 @@ public class VariationalGMM extends BatchMixtureModel {
         this.K = conf.getInt(MacroBaseConf.NUM_MIXTURES, MacroBaseDefaults.NUM_MIXTURES);
         this.progressCutoff = conf.getDouble(MacroBaseConf.EM_CUTOFF_PROGRESS, MacroBaseDefaults.EM_CUTOFF_PROGRESS);
         log.debug("created Gaussian MM with {} mixtures", this.K);
+        this.initialClusterCentersFile = conf.getString(MacroBaseConf.MIXTURE_CENTERS_FILE, null);
     }
 
     @Override
@@ -71,9 +73,9 @@ public class VariationalGMM extends BatchMixtureModel {
         W = new ArrayList<>(K);
 
         // Initialize
-        if (false) {
+        if (initialClusterCentersFile != null) {
             try {
-                m = initalizeClustersFromFile("centers.json", K);
+                m = initalizeClustersFromFile(initialClusterCentersFile, K);
             } catch (FileNotFoundException e) {
                 e.printStackTrace();
                 m = gonzalezInitializeMixtureCenters(data, K);

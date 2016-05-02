@@ -96,6 +96,7 @@ public class MacroBaseConf extends Configuration {
     public static final String NUM_SCORE_GRID_POINTS_PER_DIMENSION = "macrobase.diagnostic.gridPointsPerDimension";
     public static final String SCORED_DATA_FILE = "macrobase.diagnostic.scoreDataFile";
     public static final String DUMP_MIXTURE_COMPONENTS = "macrobase.diagnostic.dumpMixtureComponents";
+    public static final String MIXTURE_CENTERS_FILE = "macrobase.analysis.stat.mixtures.initalClusters";
 
     private final DatumEncoder datumEncoder;
 
