@@ -22,7 +22,7 @@ public class MixtureModelPipelineTest {
     private static final Logger log = LoggerFactory.getLogger(GridDumpingPipeline.class);
 
     @Test
-    public void testWellSeparatedOutliers() throws Exception {
+    public void test2ClusterOutliers() throws Exception {
         MacroBaseConf conf = new MacroBaseConf()
                 .set(MacroBaseConf.TRANSFORM_TYPE, MacroBaseConf.TransformType.VARIATIONAL_GMM)
                 .set(MacroBaseConf.USE_PERCENTILE, true) // Forced to pick.
@@ -67,5 +67,36 @@ public class MixtureModelPipelineTest {
 
         assertEquals(ar.getNumInliers(), 9, 1e-9);
         assertEquals(ar.getNumOutliers(), 9, 1e-9);
+    }
+
+    @Test
+    public void testWellSeparatedOutliers() throws Exception {
+        MacroBaseConf conf = new MacroBaseConf()
+                .set(MacroBaseConf.TRANSFORM_TYPE, MacroBaseConf.TransformType.VARIATIONAL_GMM)
+                .set(MacroBaseConf.USE_PERCENTILE, true) // Forced to pick.
+                .set(MacroBaseConf.NUM_MIXTURES, 3)
+                .set(MacroBaseConf.MIN_OI_RATIO, .01)
+                .set(MacroBaseConf.MIN_SUPPORT, .01)
+                .set(MacroBaseConf.RANDOM_SEED, 0)
+                .set(MacroBaseConf.ATTRIBUTES, Lists.newArrayList("XX")) // loader
+                .set(MacroBaseConf.LOW_METRICS, new ArrayList<>())
+                .set(MacroBaseConf.HIGH_METRICS, "XX, YY")
+                .set(MacroBaseConf.SCORED_DATA_FILE, "tmp.json")
+                .set(MacroBaseConf.DUMP_SCORE_GRID, "grid.json")
+                .set(MacroBaseConf.TARGET_GROUP, "2, 11")
+                .set(MacroBaseConf.NUM_SCORE_GRID_POINTS_PER_DIMENSION, 20)
+                .set(MacroBaseConf.AUXILIARY_ATTRIBUTES, "")
+                .set(MacroBaseConf.DATA_LOADER_TYPE, "CSV_LOADER")
+                .set(MacroBaseConf.CSV_COMPRESSION, CSVIngester.Compression.GZIP)
+                .set(MacroBaseConf.CSV_INPUT_FILE, "src/test/resources/data/3gaussians-700points.csv.gz");
+
+        conf.loadSystemProperties();
+        conf.sanityCheckBatch();
+
+        AnalysisResult ar = (new MixtureModelPipeline().initialize(conf)).run();
+        assertEquals(0, ar.getItemSets().size());
+
+        assertEquals(ar.getNumInliers(), 500, 1e-9);
+        assertEquals(ar.getNumOutliers(), 200, 1e-9);
     }
 }
