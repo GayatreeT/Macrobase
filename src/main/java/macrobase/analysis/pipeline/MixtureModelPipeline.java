@@ -40,6 +40,7 @@ public class MixtureModelPipeline extends BasePipeline {
         //FeatureTransform dumpingTransform = new BeforeAfterDumpingBatchScoreFeatureTransform(conf, gridDumpingTransform);
         //dumpingTransform.initialize();
         //dumpingTransform.consume(data);
+        gridDumpingTransform.consume(data);
 
         OutlierClassifier outlierClassifier = new MixtureGroupClassifier(conf, mixtureProbabilityTransform.getMixtureModel());
         outlierClassifier.consume(gridDumpingTransform.getStream().drain());
